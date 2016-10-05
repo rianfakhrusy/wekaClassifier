@@ -1,18 +1,23 @@
 @relation activity
 
-@attribute deadline {urgent, dekat, tidak_ada}
-@attribute hangout {ya, tidak}
-@attribute malas {ya, tidak}
-@attribute aktivitas {kumpul-kumpul, belajar, jalan-jalan_ke_mall, nonton_tv}
+@attribute outlook {sunny,overcast,rainy}
+@attribute temperature {hot,mild,cool}
+@attribute humidity {high,normal}
+@attribute windy {FALSE,TRUE}
+@attribute play {no,yes}
 
 @data
-urgent,ya,ya,kumpul-kumpul
-urgent,tidak,ya,belajar
-dekat,ya,ya,kumpul-kumpul
-tidak_ada,ya,tidak,kumpul-kumpul
-tidak_ada,tidak,ya,jalan-jalan_ke_mall
-tidak_ada,ya,tidak,kumpul-kumpul
-dekat,tidak,tidak,belajar
-dekat,tidak,ya,nonton_tv
-dekat,ya,ya,kumpul-kumpul
-urgent,tidak,tidak,belajar
+sunny,hot,high,FALSE,no
+sunny,hot,high,TRUE,no
+overcast,hot,high,FALSE,yes
+rainy,mild,high,FALSE,yes
+rainy,cool,normal,FALSE,yes
+rainy,cool,normal,TRUE,no
+overcast,cool,normal,TRUE,yes
+sunny,mild,high,FALSE,no
+sunny,cool,normal,FALSE,yes
+rainy,mild,normal,FALSE,yes
+sunny,mild,normal,TRUE,yes
+overcast,mild,high,TRUE,yes
+overcast,hot,normal,FALSE,yes
+rainy,mild,high,TRUE,no

@@ -2,14 +2,19 @@ package wekaclassifier;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Random;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.io.FilenameUtils;
 import weka.classifiers.Classifier;
+import weka.classifiers.Evaluation;
 import weka.classifiers.trees.Id3;
 import weka.classifiers.trees.J48;
 import weka.core.AttributeStats;
 import weka.core.Instances;
 import weka.core.SerializationHelper;
+import weka.core.Utils;
 import weka.core.converters.ArffSaver;
 import weka.core.converters.ConverterUtils.DataSource;
 import weka.core.converters.CSVLoader;
@@ -18,18 +23,11 @@ import weka.filters.supervised.instance.Resample;
 import weka.filters.unsupervised.attribute.Remove;
 
 public class WekaClassifier {
-
-    public static void debug() throws Exception {
-        Instances data = new DataSource("Book1.arff").getDataSet();
-        if(data.classIndex() == -1) data.setClassIndex(data.numAttributes() - 1);
-        AttributeStats stats = data.attributeStats(1);
-    }
     
     public static void main(String[] args) {
-        //try {debug();} catch (Exception e) {e.printStackTrace();}
         System.out.println("Selamat datang di Weka Classifier");
         int ch; //container angka input pilihan
-        int maxch = 9; //jumlah menu pilihan
+        int maxch = 10; //jumlah menu pilihan
         String filedataset = ""; //nama file dataset
         Instances dataset = null; //dataset
         Classifier algo = null; //model classifier dari algoritma yang dipilih
@@ -45,9 +43,10 @@ public class WekaClassifier {
                 System.out.println("4. View dataset");
                 System.out.println("5. Build classifier");
                 System.out.println("6. Test model for a given test set");
-                System.out.println("7. Save model");
-                System.out.println("8. Load model");
-                System.out.println("9. Classify unseen data from a given model");
+                System.out.println("7. 10-fold cross validation");
+                System.out.println("8. Percentage split");
+                System.out.println("9. Save model");
+                System.out.println("10. Load model");
                 System.out.println("0. Exit");
                 System.out.print("Masukkan pilihan : ");
                 ch = sc.nextInt() - 1;
@@ -70,7 +69,8 @@ public class WekaClassifier {
                                 csv.setSource(new File(filedataset));
                                 data = csv.getDataSet();
                             } catch (Exception e){
-                                e.printStackTrace();
+                                System.out.println("Error: " + e.toString());
+                                System.exit(0);
                             }
                             //save file
                             ArffSaver saver = new ArffSaver();
@@ -80,7 +80,8 @@ public class WekaClassifier {
                                 saver.setFile(new File(file));
                                 saver.writeBatch();
                             } catch (IOException e) {
-                                e.printStackTrace();
+                                System.out.println("Error: " + e.toString());
+                                System.exit(0);
                             }
                         }
                         //pilih file dataset
@@ -90,7 +91,8 @@ public class WekaClassifier {
                             if(dataset.classIndex() == -1) //set class index if it has not been set
                                 dataset.setClassIndex(dataset.numAttributes() - 1);
                         } catch (Exception e){
-                            e.printStackTrace();
+                            System.out.println("Error: " + e.toString());
+                            System.exit(0);
                         }
                     } else
                         System.out.println("Nama file harus dengan format .csv atau .arff");
@@ -115,7 +117,8 @@ public class WekaClassifier {
                             remove.setInputFormat(dataset);
                             dataset = Filter.useFilter(dataset, remove);
                         } catch (Exception e){
-                            e.printStackTrace();
+                            System.out.println("Error: " + e.toString());
+                            System.exit(0);
                         }
                         System.out.println("Atribut " + attname + " dihapus");
                     }
@@ -129,7 +132,8 @@ public class WekaClassifier {
                             resample.setInputFormat(dataset);
                             dataset = Filter.useFilter(dataset, resample);
                         } catch (Exception e) {
-                            e.printStackTrace();
+                            System.out.println("Error: " + e.toString());
+                            System.exit(0);
                         }
                     }
                     System.out.println("Dilakukan resample pada dataset");
@@ -155,7 +159,7 @@ public class WekaClassifier {
                         System.out.println("2. C4.5");
                         System.out.println("3. myID3");
                         System.out.println("4. myC4.5");
-                        System.out.println("Pilih algoritma yang diinginkan: ");
+                        System.out.print("Pilih algoritma yang diinginkan: ");
                         int cc = sc.nextInt() - 1;
                         sc.nextLine();
                         switch (cc){
@@ -168,9 +172,11 @@ public class WekaClassifier {
                                 System.out.println("Algoritma C4.5 dipilih");
                                 break;
                             case 2:
+                                algo = new myID3();
                                 System.out.println("Algoritma myID3 dipilih");
                                 break;
                             case 3:
+                                algo = new myJ48();
                                 System.out.println("Algoritma myC4.5 dipilih");
                                 break;
                         }
@@ -179,10 +185,11 @@ public class WekaClassifier {
                         else { //bangun classifier dari dataset
                             try {
                                 algo.buildClassifier(dataset);
+                                System.out.println("Classifier berhasil dibuat");
                             } catch (Exception e){
-                                e.printStackTrace();
+                                System.out.println("Error: " + e.toString());
+                                System.exit(0);
                             }
-                            System.out.println("Classifier berhasil dibuat");
                         }
                     }
                     break;
@@ -197,7 +204,8 @@ public class WekaClassifier {
                         if(testdata.classIndex() == -1) //set class index if it has not been set
                             testdata.setClassIndex(testdata.numAttributes() - 1);
                     } catch (Exception e){
-                        e.printStackTrace();
+                        System.out.println("Error: " + e.toString());
+                        System.exit(0);
                     }
                     //definisikan data berlabel yang menjadi output
                     Instances labeledData = new Instances(testdata);
@@ -205,7 +213,8 @@ public class WekaClassifier {
                         try {
                             labeledData.instance(i).setClassValue(algo.classifyInstance(testdata.instance(i)));
                         } catch (Exception e) {
-                            e.printStackTrace();
+                            System.out.println("Error: " + e.toString());
+                            System.exit(0);
                         }
                     }
                     System.out.println();
@@ -222,7 +231,54 @@ public class WekaClassifier {
                         System.out.println();
                     }
                     break; 
-                case 6: //Save model
+                case 6: //10-fold cross validation
+                    if (dataset==null) //belum pilih atribut
+                        System.out.println("Dataset belum dipilih");
+                    else if (algo==null) //belum buat classifier
+                        System.out.println("Classifier belum dibuat");
+                    else {
+                        Evaluation eval = null;
+                        try {
+                            eval = new Evaluation(dataset);
+                            eval.crossValidateModel(algo, dataset, 10, new Random(1));
+                        } catch (Exception e) {
+                            System.out.println("Error: " + e.toString());
+                            System.exit(0);;
+                        }
+                        System.out.println(eval.toSummaryString("==== 10-fold Cross Validation Statistics ====", false));
+                    }
+                    break;
+                case 7: //Percentage split
+                    if (dataset==null) //belum pilih atribut
+                        System.out.println("Dataset belum dipilih");
+                    else if (algo==null) //belum buat classifier
+                        System.out.println("Classifier belum dibuat");
+                    else {
+                        System.out.print("Masukkan persentase : ");
+                        int percent = sc.nextInt();
+                        sc.nextLine();
+                        System.out.println();
+                        Instances splitData = new Instances(dataset);
+                        splitData.randomize(new Random(1));
+                        //split train and test dataset
+                        int trainSize = (int) Utils.round(splitData.numInstances() * percent/100);
+                        int testSize = splitData.numInstances() - trainSize;
+
+                        Instances trainData = new Instances(splitData,0,trainSize);
+                        Instances testData = new Instances(splitData,trainSize,testSize);
+                        Evaluation eval = null;
+                        try {
+                            algo.buildClassifier(trainData);
+                            eval = new Evaluation(trainData);
+                            eval.evaluateModel(algo, testData);
+                        } catch (Exception e){
+                            System.out.println("Error: " + e.toString());
+                            System.exit(0);
+                        }
+                        System.out.println(eval.toSummaryString("==== Test Data Statistics ====", false));
+                    }
+                    break;
+                case 8: //Save model
                     if (dataset==null) //belum pilih atribut
                         System.out.println("Dataset belum dipilih");
                     else if (algo==null) //belum buat classifier
@@ -231,23 +287,22 @@ public class WekaClassifier {
                         try{
                             SerializationHelper.write(filedataset.replace(".arff", ".model"), algo);
                         } catch (Exception e){
-                            e.printStackTrace();
+                            System.out.println("Error: " + e.toString());
+                            System.exit(0);
                         }
                         System.out.println("Model berhasil disimpan");
                     }
                     break;
-                case 7: //Load model
+                case 9: //Load model
                     System.out.print("Masukkan nama file model (.model): ");
                     try {
                         algo = (Classifier) SerializationHelper.read(sc.nextLine());
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        System.out.println("Error: " + e.toString());
+                        System.exit(0);
                     }
                     System.out.println("Model berhasil dipasang");
                     break;  
-                case 8: //Classify unseen data from a given model
-                    System.out.println(8);
-                    break;
                 case -1: //Exit
                     break; 
             } 
